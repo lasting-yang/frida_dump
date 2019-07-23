@@ -1,9 +1,11 @@
-# frida_dump_so
+# frida_dump
 
-```
+## 1. 使用dump_so
+
+```Text
 > frida -U packagename -l dump_so.js
      ____
-    / _  |   Frida 12.4.7 - A world-class dynamic instrumentation toolkit
+    / _  |   Frida 12.4.8 - A world-class dynamic instrumentation toolkit
    | (_| |
     > _  |   Commands:
    /_/ |_|       help      -> Displays the help system
@@ -20,4 +22,26 @@
 [dump]: /data/user/0/packagename/files/name.so_0x99adf000_0x2d4000.so
 undefined
 [LGE AOSP on HammerHead::packagename]->
+```
+
+## 2. 使用dump_dex
+
+目前仅支持Android9 arm64，如果需要适配其他版本，请修改DefineClass的函数签名和base, size
+
+```Text
+frida -U --no-pause -f packagename  -l dump_dex.js
+     ____
+    / _  |   Frida 12.4.8 - A world-class dynamic instrumentation toolkit
+   | (_| |
+    > _  |   Commands:
+   /_/ |_|       help      -> Displays the help system
+   . . . .       object?   -> Display information about 'object'
+   . . . .       exit/quit -> Exit
+   . . . .
+   . . . .   More info at http://www.frida.re/docs/home/
+Spawned `packagename`. Resuming main thread!
+[Google Pixel XL::packagename]-> [dlopen:] libart.so
+_ZN3art11ClassLinker11DefineClassEPNS_6ThreadEPKcmNS_6HandleINS_6mirror11ClassLoaderEEERKNS_7DexFileERKNS9_8ClassDefE 0x7ac6dc4f74
+[DefineClass:] 0x7ac6dc4f74
+[dump dex]: /data/data/packagename/files/7aab800000_8341c4.dex
 ```
