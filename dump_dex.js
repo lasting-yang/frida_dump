@@ -18,7 +18,7 @@ function get_self_process_name() {
         result = ptr(buffer).readCString();
         return result;
     }
-    
+
     return "-1";
 }
 
@@ -31,7 +31,10 @@ function dump_dex() {
         var symbol_name = symbol.name;
         //这个DefineClass的函数签名是Android9的
         //_ZN3art11ClassLinker11DefineClassEPNS_6ThreadEPKcmNS_6HandleINS_6mirror11ClassLoaderEEERKNS_7DexFileERKNS9_8ClassDefE
-        if (symbol_name.indexOf("_ZN3art11ClassLinker11DefineClassEPNS_6ThreadEPKcmNS_6HandleINS_6mirror11ClassLoaderEEERKNS_7DexFileERKNS9_8ClassDefE") >= 0) {
+        if (symbol_name.indexOf("ClassLinker") >= 0 && 
+            symbol_name.indexOf("DefineClass") >= 0 && 
+            symbol_name.indexOf("Thread") >= 0 && 
+            symbol_name.indexOf("DexFile") >= 0 ) {
             console.log(symbol_name, symbol.address);
             addr_DefineClass = symbol.address;
         }
@@ -42,9 +45,11 @@ function dump_dex() {
     if (addr_DefineClass) {
         Interceptor.attach(addr_DefineClass, {
             onEnter: function (args) {
-
-                var base = ptr(args[5]).add(8).readPointer();
-                var size = ptr(args[5]).add(8 + 8).readUInt();
+                var dex_file = args[5];
+                //ptr(dex_file).add(Process.pointerSize) is "const uint8_t* const begin_;"
+                //ptr(dex_file).add(Process.pointerSize + Process.pointerSize) is "const size_t size_;"
+                var base = ptr(dex_file).add(Process.pointerSize).readPointer();
+                var size = ptr(dex_file).add(Process.pointerSize + Process.pointerSize).readUInt();
 
                 if (dex_maps[base] == undefined) {
                     dex_maps[base] = size;
@@ -53,6 +58,7 @@ function dump_dex() {
                         var process_name = get_self_process_name();
                         if (process_name != "-1") {
                             var dex_path = "/data/data/" + process_name + "/files/" + base.toString(16) + "_" + size.toString(16) + ".dex";
+                            console.log("[find dex]:", dex_path);
                             var fd = new File(dex_path, "wb");
                             if (fd && fd != null) {
                                 var dex_buffer = ptr(base).readByteArray(size);
@@ -116,4 +122,4 @@ function hook_dlopen() {
 }
 
 
-setImmediate(hook_dlopen);
+setImmediate(dump_dex);
