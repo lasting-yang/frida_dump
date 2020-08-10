@@ -22,6 +22,36 @@ function get_self_process_name() {
     return "-1";
 }
 
+
+function mkdir(path) {
+    var mkdirPtr = Module.getExportByName('libc.so', 'mkdir');
+    var mkdir = new NativeFunction(mkdirPtr, 'int', ['pointer', 'int']);
+
+
+
+    var opendirPtr = Module.getExportByName('libc.so', 'opendir');
+    var opendir = new NativeFunction(opendirPtr, 'pointer', ['pointer']);
+
+    var closedirPtr = Module.getExportByName('libc.so', 'closedir');
+    var closedir = new NativeFunction(closedirPtr, 'int', ['pointer']);
+
+    var cPath = Memory.allocUtf8String(path);
+    var dir = opendir(cPath);
+    if (dir != 0) {
+        closedir(dir);
+        return 0;
+    }
+    mkdir(cPath, 755);
+    chmod(path);
+}
+
+function chmod(path) {
+    var chmodPtr = Module.getExportByName('libc.so', 'chmod');
+    var chmod = new NativeFunction(chmodPtr, 'int', ['pointer', 'int']);
+    var cPath = Memory.allocUtf8String(path);
+    chmod(cPath, 755);
+}
+
 function dump_dex() {
     var libart = Process.findModuleByName("libart.so");
     var addr_DefineClass = null;
@@ -31,20 +61,21 @@ function dump_dex() {
         var symbol_name = symbol.name;
         //这个DefineClass的函数签名是Android9的
         //_ZN3art11ClassLinker11DefineClassEPNS_6ThreadEPKcmNS_6HandleINS_6mirror11ClassLoaderEEERKNS_7DexFileERKNS9_8ClassDefE
-        if (symbol_name.indexOf("ClassLinker") >= 0 && 
-            symbol_name.indexOf("DefineClass") >= 0 && 
-            symbol_name.indexOf("Thread") >= 0 && 
-            symbol_name.indexOf("DexFile") >= 0 ) {
+        if (symbol_name.indexOf("ClassLinker") >= 0 &&
+            symbol_name.indexOf("DefineClass") >= 0 &&
+            symbol_name.indexOf("Thread") >= 0 &&
+            symbol_name.indexOf("DexFile") >= 0) {
             console.log(symbol_name, symbol.address);
             addr_DefineClass = symbol.address;
         }
     }
     var dex_maps = {};
+    var dex_count = 1;
 
     console.log("[DefineClass:]", addr_DefineClass);
     if (addr_DefineClass) {
         Interceptor.attach(addr_DefineClass, {
-            onEnter: function (args) {
+            onEnter: function(args) {
                 var dex_file = args[5];
                 //ptr(dex_file).add(Process.pointerSize) is "const uint8_t* const begin_;"
                 //ptr(dex_file).add(Process.pointerSize + Process.pointerSize) is "const size_t size_;"
@@ -55,12 +86,16 @@ function dump_dex() {
                     dex_maps[base] = size;
                     var magic = ptr(base).readCString();
                     if (magic.indexOf("dex") == 0) {
+
                         var process_name = get_self_process_name();
                         if (process_name != "-1") {
-                            var dex_path = "/data/data/" + process_name + "/files/" + base.toString(16) + "_" + size.toString(16) + ".dex";
+                            var dex_dir_path = "/data/data/" + process_name + "/files/dump_dex_" + process_name;
+                            mkdir(dex_dir_path);
+                            var dex_path = dex_dir_path + "/class" + (dex_count == 1 ? "" : dex_count) + ".dex";
                             console.log("[find dex]:", dex_path);
                             var fd = new File(dex_path, "wb");
                             if (fd && fd != null) {
+                                dex_count++;
                                 var dex_buffer = ptr(base).readByteArray(size);
                                 fd.write(dex_buffer);
                                 fd.flush();
@@ -71,8 +106,8 @@ function dump_dex() {
                         }
                     }
                 }
-            }, onLeave: function (retval) {
-            }
+            },
+            onLeave: function(retval) {}
         });
     }
 }
@@ -81,7 +116,7 @@ var is_hook_libart = false;
 
 function hook_dlopen() {
     Interceptor.attach(Module.findExportByName(null, "dlopen"), {
-        onEnter: function (args) {
+        onEnter: function(args) {
             var pathptr = args[0];
             if (pathptr !== undefined && pathptr != null) {
                 var path = ptr(pathptr).readCString();
@@ -92,7 +127,7 @@ function hook_dlopen() {
                 }
             }
         },
-        onLeave: function (retval) {
+        onLeave: function(retval) {
             if (this.can_hook_libart && !is_hook_libart) {
                 dump_dex();
                 is_hook_libart = true;
@@ -101,7 +136,7 @@ function hook_dlopen() {
     })
 
     Interceptor.attach(Module.findExportByName(null, "android_dlopen_ext"), {
-        onEnter: function (args) {
+        onEnter: function(args) {
             var pathptr = args[0];
             if (pathptr !== undefined && pathptr != null) {
                 var path = ptr(pathptr).readCString();
@@ -112,7 +147,7 @@ function hook_dlopen() {
                 }
             }
         },
-        onLeave: function (retval) {
+        onLeave: function(retval) {
             if (this.can_hook_libart && !is_hook_libart) {
                 dump_dex();
                 is_hook_libart = true;
