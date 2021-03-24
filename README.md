@@ -1,9 +1,11 @@
 # frida_dump
 
-## 1. 使用dump_so
+## 1. 使用dump_module
+
+### Android dump_so
 
 ```Text
-> frida -U packagename -l dump_so.js
+> frida -U packagename -l dump_module.js
      ____
     / _  |   Frida 12.4.8 - A world-class dynamic instrumentation toolkit
    | (_| |
@@ -22,6 +24,28 @@
 [dump]: /data/user/0/packagename/files/name.so_0x99adf000_0x2d4000.so
 undefined
 [LGE AOSP on HammerHead::packagename]->
+```
+### iOS  dump_ios_module
+
+```Text
+➜  frida_dump git:(master) ✗ frida -U app_name -l dump_module.js
+     ____
+    / _  |   Frida 14.2.13 - A world-class dynamic instrumentation toolkit
+   | (_| |
+    > _  |   Commands:
+   /_/ |_|       help      -> Displays the help system
+   . . . .       object?   -> Display information about 'object'
+   . . . .       exit/quit -> Exit
+   . . . .
+   . . . .   More info at https://www.frida.re/docs/home/
+
+[iPhone::app_name]-> dump_ios_module("module_name")
+[name]: module_name
+[base]: 0x100778000
+[size]: 0x2c08000
+[path]: /private/var/containers/Bundle/Application/1085C5E3-B65D-4189-8733-BFC09255CB63/module_name.app/module_name
+[dump]: /var/mobile/Containers/Data/Application/3891FB05-424B-4F77-9FA4-9640C11924AD/Documents/module_name_0x100778000_0x2c08000
+[iPhone::app_name]->
 ```
 
 ## 2. 使用dump_dex
