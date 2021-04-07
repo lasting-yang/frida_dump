@@ -25,6 +25,11 @@
 undefined
 [LGE AOSP on HammerHead::packagename]->
 ```
+#### 修复dump的so
+
+[https://github.com/F8LEFT/SoFixer](https://github.com/F8LEFT/SoFixer)
+
+
 ### iOS  dump_ios_module
 
 ```Text
