@@ -44,33 +44,7 @@ adb shell /data/local/tmp/SoFixer -m 0xf2282000 -s /data/local/tmp/libc.so.dump.
 libc.so_0xf2282000_819200_fix.so
 ```
 
-
-### iOS  dump_ios_module
-
-```Text
-➜  frida_dump git:(master) ✗ frida -U app_name -l dump_module.js
-     ____
-    / _  |   Frida 14.2.13 - A world-class dynamic instrumentation toolkit
-   | (_| |
-    > _  |   Commands:
-   /_/ |_|       help      -> Displays the help system
-   . . . .       object?   -> Display information about 'object'
-   . . . .       exit/quit -> Exit
-   . . . .
-   . . . .   More info at https://www.frida.re/docs/home/
-
-[iPhone::app_name]-> dump_ios_module("module_name")
-[name]: module_name
-[base]: 0x100778000
-[size]: 0x2c08000
-[path]: /private/var/containers/Bundle/Application/1085C5E3-B65D-4189-8733-BFC09255CB63/module_name.app/module_name
-[dump]: /var/mobile/Containers/Data/Application/3891FB05-424B-4F77-9FA4-9640C11924AD/Documents/module_name_0x100778000_0x2c08000
-[iPhone::app_name]->
-```
-
-## 2. 使用dump_dex
-
-更新了查找DefineClass的函数签名
+## 2. dump android dex
 
 ```Text
 frida -U --no-pause -f packagename  -l dump_dex.js
@@ -89,3 +63,7 @@ _ZN3art11ClassLinker11DefineClassEPNS_6ThreadEPKcmNS_6HandleINS_6mirror11ClassLo
 [DefineClass:] 0x7ac6dc4f74
 [dump dex]: /data/data/packagename/files/7aab800000_8341c4.dex
 ```
+
+### Thanks
+
+[https://github.com/F8LEFT/SoFixer](https://github.com/F8LEFT/SoFixer)
