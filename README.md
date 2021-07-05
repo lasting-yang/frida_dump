@@ -2,6 +2,12 @@
 
 ## 1. dump android module
 
+### usage：
+
+​	**python dump_so.py**
+
+​	**python dump_so.py so_name**
+
 ```
 ➜  frida_dump git:(master) ✗ python dump_so.py libc.so              
 {'name': 'libc.so', 'base': '0xf2282000', 'size': 819200, 'path': '/apex/com.android.runtime/lib/bionic/libc.so'}
