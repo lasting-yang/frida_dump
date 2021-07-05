@@ -2,7 +2,7 @@
 
 ## 1. dump android module
 
-### usage：
+### usage:
 
 ​	**python dump_so.py**
 
